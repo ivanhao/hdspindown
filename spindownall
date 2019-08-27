@@ -1,0 +1,9 @@
+#!/bin/bash
+disks=`ls /dev|grep sd'[a-z]*$'`
+if [ ! -f /usr/bin/hdspindown ];then
+	cp ./hdspindown /usr/bin/
+fi
+for i in $disks;
+do
+	hdspindown $i;
+done
