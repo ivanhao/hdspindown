@@ -1,7 +1,7 @@
 #!/bin/sh
 
-RAID=md125
-STATS=`grep md125 /proc/diskstats`
+disk=$1
+STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
 
 LOCKFILE=/tmp/spinDown.lock
 STATFILE=/tmp/spinDown
@@ -14,40 +14,35 @@ fi
 
 touch $LOCKFILE
 
-DATE=`/bin/date`
+DATE=`date`
 
-if [ -f ${STATFILE}.${RAID}.stat ]; then
-    PREVSTATS=`/bin/cat ${STATFILE}.${RAID}.stat`
-    if [ "$STATS" == "$PREVSTATS" ] && [ ! -f ${DOWNFILE}.${RAID}.down ]; then
+if [ -f ${STATFILE}.${disk}.stat ]; then
+    PREVSTATS=`cat ${STATFILE}.${disk}.stat`
+    if [ "$STATS" = "$PREVSTATS" ] && [ ! -f ${DOWNFILE}.${disk}.down ]; then
         # Disk stats unchanged and the disk spinning.  Hence, idle -> spin down.
-        echo "$DATE ${RAID} idle, spinning down" >> /tmp/spinDown.log
-        /sbin/service smartd stop > /dev/null
-        /usr/bin/sdparm --command=sync /dev/sdb &> /dev/null
-        /usr/bin/sdparm --command=stop /dev/sdb &> /dev/null
-        /usr/bin/sdparm --command=sync /dev/sdc &> /dev/null
-        /usr/bin/sdparm --command=stop /dev/sdc &> /dev/null
-        /usr/bin/sdparm --command=sync /dev/sdd &> /dev/null
-        /usr/bin/sdparm --command=stop /dev/sdd &> /dev/null
-        /usr/bin/sdparm --command=sync /dev/sde &> /dev/null
-        /usr/bin/sdparm --command=stop /dev/sde &> /dev/null
-        STATS=`grep ${RAID} /proc/diskstats`
-        echo "$STATS" > ${STATFILE}.${RAID}.stat
-        touch ${DOWNFILE}.${RAID}.down
+        echo "$DATE ${disk} idle, spinning down" >> /tmp/spinDown.log
+        service smartd stop > /dev/null
+        #sdparm --command=sync /dev/${disk} &> /dev/null
+        #sdparm --command=stop /dev/${disk} &> /dev/null
+	hdparm -y /dev/${disk} &> /dev/null
+        STATS=`grep ${disk} /proc/diskstats`
+        echo "$STATS" > ${STATFILE}.${disk}.stat
+        touch ${DOWNFILE}.${disk}.down
     else
-        if [ "$STATS" != "$PREVSTATS" ] && [ -f ${DOWNFILE}.${RAID}.down ]; then
+        if [ "$STATS" != "$PREVSTATS" ] && [ -f ${DOWNFILE}.${disk}.down ]; then
             # Disk stats are different & disk was down.  Remove the down state file.
-            echo "$DATE stats different for ${RAID}" >> /tmp/spinDown.log
-            /sbin/service smartd start > /dev/null
-            rm -f ${DOWNFILE}.${RAID}.down
+            echo "$DATE stats different for ${disk}" >> /tmp/spinDown.log
+            service smartd start > /dev/null
+            rm -f ${DOWNFILE}.${disk}.down
         fi
         if [ "$STATS" != "$PREVSTATS" ]; then
-            echo "$STATS" > ${STATFILE}.${RAID}.stat
+            echo "$STATS" > ${STATFILE}.${disk}.stat
         fi
     fi
 else
     # Initialise the state file
-    echo "$DATE initialising for ${RAID}" >> /tmp/spinDown.log
-    echo "$STATS" > ${STATFILE}.${RAID}.stat
+    echo "$DATE initialising for ${disk}" >> /tmp/spinDown.log
+    echo "$STATS" > ${STATFILE}.${disk}.stat
 fi
 
 rm -f $LOCKFILE
