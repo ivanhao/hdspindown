@@ -1,4 +1,5 @@
 # hdspindown
+>用来解决linux下通过hdparm -S 60这种方式硬盘无法自动休眠的问题。例如一些WD的硬盘，或pve下zfs硬盘。
 ## 用法：
 单盘：
 ```
