@@ -28,7 +28,7 @@ if [ -f ${STATFILE}.${disk}.stat ]; then
         #sdparm --command=sync /dev/${disk} &> /dev/null
         #sdparm --command=stop /dev/${disk} &> /dev/null
 	/sbin/hdparm -y /dev/${disk} &> /dev/null
-        STATS=`grep ${disk} /proc/diskstats`
+	STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
         echo "$STATS" > ${STATFILE}.${disk}.stat
         touch ${DOWNFILE}.${disk}.down
     else
