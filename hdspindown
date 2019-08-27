@@ -21,10 +21,10 @@ if [ -f ${STATFILE}.${disk}.stat ]; then
     if [ "$STATS" = "$PREVSTATS" ] && [ ! -f ${DOWNFILE}.${disk}.down ]; then
         # Disk stats unchanged and the disk spinning.  Hence, idle -> spin down.
         echo "$DATE ${disk} idle, spinning down" >> /tmp/spinDown.log
-        service smartd stop > /dev/null
+        #service smartd stop > /dev/null
         #sdparm --command=sync /dev/${disk} &> /dev/null
         #sdparm --command=stop /dev/${disk} &> /dev/null
-	hdparm -y /dev/${disk} &> /dev/null
+	/sbin/hdparm -y /dev/${disk} &> /dev/null
         STATS=`grep ${disk} /proc/diskstats`
         echo "$STATS" > ${STATFILE}.${disk}.stat
         touch ${DOWNFILE}.${disk}.down
@@ -32,7 +32,7 @@ if [ -f ${STATFILE}.${disk}.stat ]; then
         if [ "$STATS" != "$PREVSTATS" ] && [ -f ${DOWNFILE}.${disk}.down ]; then
             # Disk stats are different & disk was down.  Remove the down state file.
             echo "$DATE stats different for ${disk}" >> /tmp/spinDown.log
-            service smartd start > /dev/null
+            #service smartd start > /dev/null
             rm -f ${DOWNFILE}.${disk}.down
         fi
         if [ "$STATS" != "$PREVSTATS" ]; then
@@ -46,5 +46,6 @@ else
 fi
 
 rm -f $LOCKFILE
-
-
+if [ `cat /tmp/spindown.log|wc -l` > 200 ];then
+	mv /tmp/spindown.log /tmp/spindown.log.1
+fi
