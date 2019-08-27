@@ -11,6 +11,9 @@ if [ -f $LOCKFILE ]; then
     # we are already running
     exit 1
 fi
+if [ ! -f /sbin/hdparm ];then
+   apt-get -f install hdparm
+fi 
 
 touch $LOCKFILE
 
