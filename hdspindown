@@ -49,6 +49,6 @@ else
 fi
 
 rm -f $LOCKFILE
-if [ `cat /tmp/spinDown.log|wc -l` > 200 ];then
+if [ `cat /tmp/spinDown.log|wc -l` -gt 200 ];then
 	mv /tmp/spinDown.log /tmp/spinDown.log.1
 fi
