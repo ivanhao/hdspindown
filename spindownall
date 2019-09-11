@@ -1,6 +1,5 @@
 #!/bin/bash
 disks=`ls /dev|grep sd'[a-z]*$'`
-echo $disks
 if [ ! -f /usr/bin/hdspindown ];then
 	cp ./hdspindown /usr/bin/
 fi
