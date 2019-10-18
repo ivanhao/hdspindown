@@ -6,6 +6,7 @@ STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
 LOCKFILE=/tmp/spinDown.lock
 STATFILE=/tmp/spinDown
 DOWNFILE=/tmp/spinDown
+LOGFILE=/tmp/spinDown.log
 
 if [ -f $LOCKFILE ]; then
     # we are already running
@@ -14,7 +15,9 @@ fi
 if [ ! -f /sbin/hdparm ];then
    apt-get -f install hdparm
 fi 
-
+if [ ! -f $LOGFILE ];then
+    touch $LOGFILE
+fi 
 touch $LOCKFILE
 
 DATE=`date`
