@@ -14,10 +14,10 @@ if [ -f $LOCKFILE ]; then
 fi
 if [ ! -f /sbin/hdparm ];then
    apt-get -f install hdparm
-fi 
+fi
 if [ ! -f $LOGFILE ];then
     touch $LOGFILE
-fi 
+fi
 touch $LOCKFILE
 
 DATE=`date`

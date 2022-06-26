@@ -1,10 +1,11 @@
 #!/bin/bash
 #disks=`ls /dev|grep sd'[a-z]*$'`
-disks=`ll /dev/disk/by-id/|grep -v 'part'|grep -v 'SSD'|grep -v 'nvme'|grep -v 'wwn'|awk -F '/' 'NR>1{print "/dev/"$NF}'`
+disks=`ls -l /dev/disk/by-id/|grep -v 'part'|grep -v 'SSD'|grep -v 'nvme'|grep -v 'wwn'|awk -F '/' 'NR>1{print $NF}'`
 if [ ! -f /usr/bin/hdspindown ];then
 	cp ./hdspindown /usr/bin/
 fi
 for i in $disks;
 do
-	hdspindown $i;
+    echo $i
+	hdspindown $i
 done
