@@ -1,5 +1,6 @@
 #!/bin/bash
-disks=`ls /dev|grep sd'[a-z]*$'`
+#disks=`ls /dev|grep sd'[a-z]*$'`
+disks=`ll /dev/disk/by-id/|grep -v 'part'|grep -v 'SSD'|grep -v 'nvme'|grep -v 'wwn'|awk -F '/' 'NR>1{print "/dev/"$NF}'`
 if [ ! -f /usr/bin/hdspindown ];then
 	cp ./hdspindown /usr/bin/
 fi
