@@ -11,5 +11,5 @@ uniq_disks=`echo ${uniq_disks}|sed 's/xxc/ /'`
 for i in $uniq_disks;
 do
     #echo $i
-    hdspindown $i
+    ~/hdspindown/hdstatealert.sh $i
 done
