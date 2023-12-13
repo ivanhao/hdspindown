@@ -20,9 +20,9 @@ if [ ! -f $LOGFILE ];then
 fi
 touch $LOCKFILE
 
-DATE=`date`
+DATE=`date +"%m-%d %H:%M"`
 
-echo "${STATS}----$DATE" >> STAT.${disk}.log
+#echo "${STATS}----$DATE" >> /root/hdspindown/STAT.${disk}.log
 
 if [ -f ${STATFILE}.${disk}.stat ]; then
     PREVSTATS=`cat ${STATFILE}.${disk}.stat`
@@ -33,14 +33,14 @@ if [ -f ${STATFILE}.${disk}.stat ]; then
             #service smartd stop > /dev/null
             #sdparm --command=sync /dev/${disk} &> /dev/null
             #sdparm --command=stop /dev/${disk} &> /dev/null
-	        /sbin/hdparm -y /dev/${disk} &> /dev/null
+	        /sbin/hdparm -y /dev/${disk} >/dev/null 2>&1
 	        STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
             echo "$STATS" > ${STATFILE}.${disk}.stat
             touch ${DOWNFILE}.${disk}.down
         else
-            STAT_CMD=`/sbin/hdparm -C /dev/${disk} | grep 'active'|awk '{print $4}'`
+            STAT_CMD=`/sbin/hdparm -C /dev/${disk} | grep 'state'|awk '{print $4}'`
             if [ "x$STAT_CMD" = "xactive/idle" ];then
-                echo "echo $DATE ${disk} stat cmd error" >> ${LOGFILE}
+                echo "$DATE ${disk} stat cmd error" >> ${LOGFILE}
                 rm -f ${DOWNFILE}.${disk}.down
             fi
 

@@ -2,10 +2,10 @@
 
 disk=$1
 
-STATS=`/sbin/hdparm -C /dev/${disk} | grep 'active'|awk '{print $4}'`
+STATS=`/sbin/hdparm -C /dev/${disk} | grep 'state'|awk '{print $4}'`
 STATCMDFILE=/tmp/spinDown.CMD
 LOGFILE=/root/hdspindown/spinDown
-DATE=`date`
+DATE=`date +"%m-%d %H:%M"`
 if [ -f ${STATCMDFILE}.${disk} ]; then
     PREVSTATS=`cat ${STATCMDFILE}.${disk}`
     if [ "$STATS" = "$PREVSTATS" ]; then
