@@ -6,7 +6,7 @@ STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
 LOCKFILE=/tmp/spinDown.lock
 STATFILE=/tmp/spinDown
 DOWNFILE=/tmp/spinDown
-LOGFILE=/tmp/spinDown.log
+LOGFILE=/root/hdspindown/spinDown.log
 
 if [ -f $LOCKFILE ]; then
     # we are already running
@@ -20,39 +20,48 @@ if [ ! -f $LOGFILE ];then
 fi
 touch $LOCKFILE
 
-DATE=`date`
+DATE=`date +"%m-%d %H:%M"`
+
+#echo "${STATS}----$DATE" >> /root/hdspindown/STAT.${disk}.log
 
 if [ -f ${STATFILE}.${disk}.stat ]; then
     PREVSTATS=`cat ${STATFILE}.${disk}.stat`
-    if [ "$STATS" = "$PREVSTATS" ] && [ ! -f ${DOWNFILE}.${disk}.down ]; then
-        # Disk stats unchanged and the disk spinning.  Hence, idle -> spin down.
-        echo "$DATE ${disk} idle, spinning down" >> /tmp/spinDown.log
-        #service smartd stop > /dev/null
-        #sdparm --command=sync /dev/${disk} &> /dev/null
-        #sdparm --command=stop /dev/${disk} &> /dev/null
-	/sbin/hdparm -y /dev/${disk} &> /dev/null
-	STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
-        echo "$STATS" > ${STATFILE}.${disk}.stat
-        touch ${DOWNFILE}.${disk}.down
+    if [ "$STATS" = "$PREVSTATS" ]; then
+        if [ ! -f ${DOWNFILE}.${disk}.down ]; then
+            # Disk stats unchanged and the disk spinning.  Hence, idle -> spin down.
+            echo "$DATE ${disk} idle, spinning down" >> ${LOGFILE} 
+            #service smartd stop > /dev/null
+            #sdparm --command=sync /dev/${disk} &> /dev/null
+            #sdparm --command=stop /dev/${disk} &> /dev/null
+	        /sbin/hdparm -y /dev/${disk} >/dev/null 2>&1
+	        STATS=`grep $disk /proc/diskstats|awk 'NR==1{print $0}'`
+            echo "$STATS" > ${STATFILE}.${disk}.stat
+            touch ${DOWNFILE}.${disk}.down
+        else
+            STAT_CMD=`/sbin/hdparm -C /dev/${disk} | grep 'state'|awk '{print $4}'`
+            if [ "x$STAT_CMD" = "xactive/idle" ];then
+                echo "$DATE ${disk} stat cmd error" >> ${LOGFILE}
+                rm -f ${DOWNFILE}.${disk}.down
+            fi
+
+        fi
     else
-        if [ "$STATS" != "$PREVSTATS" ] && [ -f ${DOWNFILE}.${disk}.down ]; then
+        if [ -f ${DOWNFILE}.${disk}.down ]; then
             # Disk stats are different & disk was down.  Remove the down state file.
-            echo "$DATE stats different for ${disk}" >> /tmp/spinDown.log
+            echo "$DATE stats different for ${disk}" >> ${LOGFILE}
             #service smartd start > /dev/null
             rm -f ${DOWNFILE}.${disk}.down
         fi
-        if [ "$STATS" != "$PREVSTATS" ]; then
-            echo "$STATS" > ${STATFILE}.${disk}.stat
-        fi
+        echo "$STATS" > ${STATFILE}.${disk}.stat
     fi
 else
     # Initialise the state file
-    echo "$DATE initialising for ${disk}" >> /tmp/spinDown.log
+    echo "$DATE initialising for ${disk}" >> ${LOGFILE}
     echo "$STATS" > ${STATFILE}.${disk}.stat
 fi
 
 rm -f $LOCKFILE
-if [ `cat /tmp/spinDown.log|wc -l` -gt 200 ];then
-	mv /tmp/spinDown.log /tmp/spinDown.log.1
-    touch /tmp/spinDown.log
+if [ `cat ${LOGFILE}|wc -l` -gt 200 ];then
+	mv ${LOGFILE} ${LOGFILE}.1
+    touch ${LOGFILE}
 fi
